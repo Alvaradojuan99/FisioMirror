@@ -1,0 +1,200 @@
+<!DOCTYPE html><html class="light" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FISIOMIRROR AR | Sesión Activa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#00468c", "surface-container-low": "#f3f4f5", error: "#ba1a1a", "on-primary": "#ffffff", "primary-fixed": "#84f8c8", "bg-gradient-end": "#4ade80", "surface-variant": "#e1e3e4", "brand-green-light": "#e8f5ed", "surface-container": "#edeeef", "on-tertiary-container": "#f5fff6", "inverse-on-surface": "#f0f1f2", "on-error-container": "#93000a", "on-surface-variant": "#3d4a43", "secondary-fixed-dim": "#a9c7ff", "surface-container-lowest": "#ffffff", "surface-tint": "#006c4d", background: "#f8f9fa", "on-secondary-container": "#00376f", "on-primary-fixed-variant": "#005139", "on-secondary": "#ffffff", "on-tertiary-fixed": "#002113", "surface-bright": "#f8f9fa", "tertiary-fixed-dim": "#4edea3", "primary-container": "#008560", "primary-fixed-dim": "#67dbad", "error-container": "#ffdad6", "on-tertiary-fixed-variant": "#005236", "tertiary-fixed": "#6ffbbe", "on-primary-container": "#f5fff7", surface: "#f8f9fa", "surface-container-highest": "#e1e3e4", "brand-green-dark": "#006b44", secondary: "#005db6", primary: "#00694b", tertiary: "#006947", "tertiary-container": "#00855b", "inverse-surface": "#2e3132", "on-background": "#191c1d", "secondary-container": "#63a1ff", "on-primary-fixed": "#002115", "on-surface": "#191c1d", "surface-container-high": "#e7e8e9", "secondary-fixed": "#d6e3ff", "on-error": "#ffffff", "on-secondary-fixed": "#001b3d", "inverse-primary": "#67dbad", "outline-variant": "#bccac1", "surface-dim": "#d9dadb", outline: "#6d7a72", "on-tertiary": "#ffffff", "bg-gradient-start": "#86efac"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"container-max": "700px", "stack-lg": "2rem", "section-padding": "5rem", "stack-md": "1.5rem", "stack-sm": "0.25rem", "edge-margin": "2rem", "margin-mobile": "16px", base: "8px", gutter: "24px", "margin-desktop": "48px", "hit-target-min": "48px"}, fontFamily: {"label-md": ["Inter"], button: ["Inter"], "body-md": ["Inter"], "headline-sm": ["Inter"], display: ["Inter"], "headline-md": ["Inter"], "body-lg": ["Inter"], "display-lg-mobile": ["Inter"], "stats-number": ["Inter"], "label-xl": ["Inter"], "display-lg": ["Inter"], headline: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"label-md": ["14px", {lineHeight: "20px", fontWeight: "500"}], button: ["16px", {lineHeight: "24px", letterSpacing: "0.05em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-sm": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700"}], display: ["30px", {lineHeight: "36px", letterSpacing: "-0.025em", fontWeight: "700"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "display-lg-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "stats-number": ["36px", {lineHeight: "44px", fontWeight: "700"}], "label-xl": ["20px", {lineHeight: "24px", letterSpacing: "0.01em", fontWeight: "600"}], "display-lg": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .skeleton-line {
+            stroke: #00694b; /* Brand Primary Green */
+            stroke-width: 4;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 8px rgba(0, 105, 75, 0.5));
+        }
+        .skeleton-joint {
+            fill: #4edea3; /* Brand Tertiary Fixed Dim */
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+        .target-ping {
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-anim {
+            animation: floating 3s ease-in-out infinite;
+        }
+        .voice-pulse {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(0, 105, 75, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 105, 75, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 105, 75, 0); }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface overflow-hidden h-screen w-screen">
+<!-- AR VIEWPORT (BACKGROUND) -->
+<div class="fixed inset-0 z-0 bg-black">
+<div class="relative w-full h-full">
+<!-- Simulated Camera Feed -->
+<div class="absolute inset-0 bg-cover bg-center opacity-90" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwpQCYw6R28B8vJfGsjDSBRE5oscM1IPMX1Lhm6GdLsLZcdULDXfwkQaB7e1y-sE79YomxdElF-EuP3dhN8BL9Ji7eJtbvv6tYrwv0dWBgw2BZUEuPGHhdKpaeY0PLgO_b4-F_Z_MDfRwdbEq-pzJ3PIvqSf05Js3Azrzs1qEm-VZ2fTaTMjZSTQh6FRkoVDm7EU9mhmi4P1AC2lrQ8KyofG33YO5C5VmXV8L3ElaET_y-EpEXLQO2B0j5s_uEwSqFFmN6Hn3v3IU')">
+</div>
+<!-- SVG Biomechanical Skeleton Overlay -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1000 1000">
+<!-- Skeleton Lines -->
+<line class="skeleton-line" x1="400" x2="300" y1="300" y2="450"></line>
+<line class="skeleton-line" x1="300" x2="250" y1="450" y2="600"></line>
+<line class="skeleton-line" x1="600" x2="700" y1="300" y2="450"></line>
+<line class="skeleton-line" style="stroke: #ba1a1a;" x1="700" x2="750" y1="450" y2="600"></line> <!-- Error State -->
+<line class="skeleton-line" x1="400" x2="600" y1="300" y2="300"></line>
+<line class="skeleton-line" x1="400" x2="450" y1="300" y2="650"></line>
+<line class="skeleton-line" x1="600" x2="550" y1="300" y2="650"></line>
+<!-- Joints -->
+<circle class="skeleton-joint" cx="400" cy="300" r="8"></circle>
+<circle class="skeleton-joint" cx="300" cy="450" r="8"></circle>
+<circle class="skeleton-joint" cx="250" cy="600" r="8"></circle>
+<circle class="skeleton-joint" cx="600" cy="300" r="8"></circle>
+<circle class="skeleton-joint" cx="700" cy="450" r="8"></circle>
+<circle class="skeleton-joint" cx="750" cy="600" r="8" style="fill: #ba1a1a;"></circle> <!-- Error Joint -->
+<!-- Angle Indicators -->
+<g transform="translate(280, 430)">
+<rect fill="rgba(0,105,75,0.7)" height="24" rx="4" width="60" x="0" y="0"></rect>
+<text fill="white" style="font-family: Inter; font-size: 14px; font-weight: 600;" text-anchor="middle" x="30" y="17">115°</text>
+</g>
+<g transform="translate(680, 430)">
+<rect fill="rgba(186,26,26,0.8)" height="24" rx="4" width="60" x="0" y="0"></rect>
+<text fill="white" style="font-family: Inter; font-size: 14px; font-weight: 600;" text-anchor="middle" x="30" y="17">85°</text>
+</g>
+</svg>
+<!-- Interactive Gamification Elements -->
+<div class="absolute top-[20%] left-[15%] group cursor-pointer pointer-events-auto">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<div class="absolute inset-0 bg-tertiary-fixed-dim opacity-20 rounded-full target-ping"></div>
+<div class="w-16 h-16 bg-tertiary-container border-2 border-on-tertiary-container rounded-full flex items-center justify-center shadow-lg float-anim">
+<span class="material-symbols-outlined text-on-tertiary-container text-4xl">touch_app</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-[30%] right-[20%] group cursor-pointer pointer-events-auto">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<div class="absolute inset-0 bg-primary-fixed opacity-20 rounded-full target-ping"></div>
+<div class="w-16 h-16 bg-primary-container border-2 border-on-primary-container rounded-full flex items-center justify-center shadow-lg float-anim" style="animation-delay: 1s;">
+<span class="material-symbols-outlined text-on-primary-container text-4xl">ads_click</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- UI OVERLAYS -->
+<!-- Top Bar -->
+<header class="fixed top-0 left-0 right-0 p-margin-mobile md:p-gutter flex justify-between items-start z-10 pointer-events-none">
+<div class="flex flex-col gap-2 pointer-events-auto">
+<div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
+<div class="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+<span class="font-headline-md text-headline-md text-primary tracking-tight">FISIOMIRROR AR</span>
+</div>
+<div class="glass-panel px-3 py-1 rounded-lg inline-flex items-center gap-2 w-fit">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">cloud_off</span>
+<span class="text-xs font-label-xl text-on-surface-variant uppercase tracking-wider">Modo sin conexión</span>
+</div>
+</div>
+<div class="glass-panel px-6 py-4 rounded-xl text-right pointer-events-auto border-t-2 border-primary">
+<div class="text-on-surface-variant text-label-xl uppercase tracking-widest mb-1">Tiempo de Sesión</div>
+<div class="font-stats-number text-stats-number text-primary">12:45</div>
+</div>
+</header>
+<!-- Side Feedback Bar -->
+<aside class="fixed right-margin-mobile md:right-margin-desktop top-1/2 -translate-y-1/2 flex flex-col gap-gutter z-10 w-64 pointer-events-none">
+<!-- Progress Meter -->
+<div class="glass-panel p-6 rounded-2xl flex flex-col gap-4 pointer-events-auto border-l-4 border-primary">
+<div class="flex justify-between items-center">
+<span class="text-label-xl text-on-surface-variant">Calidad de Forma</span>
+<span class="text-label-xl font-bold text-primary">92%</span>
+</div>
+<div class="h-40 w-full bg-surface-container rounded-full relative overflow-hidden flex flex-col-reverse">
+<div class="w-full bg-primary transition-all duration-500" style="height: 92%;"></div>
+<div class="absolute top-[30%] w-full border-t border-dashed border-outline-variant"></div>
+</div>
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+<span class="text-body-md font-semibold">Ángulo Correcto</span>
+</div>
+</div>
+<!-- Repetition Counter -->
+<div class="glass-panel p-6 rounded-2xl text-center pointer-events-auto">
+<div class="text-label-xl text-on-surface-variant uppercase mb-2">Repeticiones</div>
+<div class="text-display-lg font-display-lg text-primary">14 <span class="text-headline-md text-outline">/ 20</span></div>
+</div>
+</aside>
+<!-- Bottom Controls & Voice Assistant -->
+<footer class="fixed bottom-margin-mobile md:bottom-margin-desktop left-1/2 -translate-x-1/2 w-full max-w-4xl px-margin-mobile flex flex-col items-center gap-base z-10">
+<!-- Voice Assistant Message -->
+<div class="glass-panel px-8 py-4 rounded-full flex items-center gap-4 mb-4 voice-pulse border-2 border-primary-container">
+<div class="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">graphic_eq</span>
+</div>
+<span class="text-headline-md font-headline-md text-primary italic">"¡Muy bien! Mantén esa posición"</span>
+</div>
+<!-- Action Bar -->
+<div class="w-full glass-panel p-4 rounded-3xl flex justify-between items-center">
+<div class="flex gap-4">
+<button class="w-hit-target-min h-hit-target-min rounded-full bg-surface-container flex items-center justify-center hover:bg-primary-fixed transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">pause</span>
+</button>
+<button class="w-hit-target-min h-hit-target-min rounded-full bg-surface-container flex items-center justify-center hover:bg-primary-fixed transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">volume_up</span>
+</button>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex flex-col items-end">
+<span class="text-xs text-on-surface-variant font-bold uppercase tracking-tighter">Ejercicio Actual</span>
+<span class="text-body-lg font-semibold text-primary">Abducción de Hombro</span>
+</div>
+<button class="bg-error text-on-primary px-8 h-14 rounded-2xl font-label-xl flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md">
+<span class="material-symbols-outlined">stop</span>
+                Finalizar Sesión
+            </button>
+</div>
+</div>
+</footer>
+<script>
+    const finishBtn = document.querySelector('button.bg-error');
+    finishBtn.addEventListener('click', () => {
+        if(confirm('¿Deseas finalizar la sesión actual? Tus progresos se guardarán localmente.')) {
+            alert('Sesión finalizada. Generando informe de progreso...');
+        }
+    });
+
+    const voiceText = document.querySelector('.voice-pulse span:last-child');
+    const messages = [
+        "¡Muy bien! Mantén esa posición",
+        "Sube un poco más el brazo derecho",
+        "¡Perfecto! Sigue así",
+        "Casi llegas al objetivo virtual",
+        "Controla el descenso suavemente"
+    ];
+    let msgIndex = 0;
+    setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        voiceText.style.opacity = 0;
+        setTimeout(() => {
+            voiceText.innerText = `"${messages[msgIndex]}"`;
+            voiceText.style.opacity = 1;
+        }, 500);
+    }, 8000);
+</script>
+</body></html>
