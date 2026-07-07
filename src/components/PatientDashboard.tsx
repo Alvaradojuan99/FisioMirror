@@ -80,8 +80,8 @@ export function PatientDashboard({ onNavigate }: { onNavigate: (v: PatientView, 
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-outline-variant/10">
         <div className="px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="lg:hidden w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-              <span className="material-symbols-outlined text-white" style={{ fontSize: 24 }}>monitor_heart</span>
+            <div className="lg:hidden w-10 h-10 flex items-center justify-center">
+              <img src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png" alt="FisioMirror" className="w-10 h-10 object-contain" />
             </div>
             <div className="hidden lg:block">
               <p className="text-xs text-outline font-medium">{DAYS[today]}, {new Date().toLocaleDateString('es', { day: 'numeric', month: 'long' })}</p>

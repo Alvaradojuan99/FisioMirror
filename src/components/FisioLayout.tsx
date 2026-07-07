@@ -39,12 +39,11 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
           {/* Brand */}
           <div className="relative p-6 border-b border-outline-variant/10">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg animate-pulse-soft" />
-                <div className="relative w-12 h-12 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="material-symbols-outlined text-white fill" style={{ fontSize: 26 }}>monitor_heart</span>
-                </div>
-              </div>
+              <img
+                src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
+                alt="FisioMirror"
+                className="w-12 h-12 object-contain shrink-0"
+              />
               <div>
                 <p className="text-xl font-extrabold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                   FisioMirror

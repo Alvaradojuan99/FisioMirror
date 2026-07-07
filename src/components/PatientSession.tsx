@@ -299,6 +299,7 @@ export function PatientSession({ autoStart = false }: { autoStart?: boolean }) {
           <div className="flex items-center justify-between">
             <div className="glass-panel rounded-full px-4 py-2 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${running ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></span>
+              <img src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png" alt="FisioMirror" className="w-6 h-6 object-contain" />
               <span className="text-sm font-bold text-primary">FISIOMIRROR AR</span>
             </div>
             <div className="glass-panel rounded-2xl px-4 py-2 text-center border-t-2 border-primary">

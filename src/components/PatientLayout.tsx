@@ -38,12 +38,11 @@ export function PatientLayout({ children, current, onNavigate, onSignOut }: Prop
           {/* Brand */}
           <div className="relative p-6 border-b border-outline-variant/10">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 gradient-primary rounded-xl blur-lg opacity-50 animate-pulse-soft" />
-                <div className="relative w-14 h-14 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="material-symbols-outlined text-white fill" style={{ fontSize: 28 }}>self_improvement</span>
-                </div>
-              </div>
+              <img
+                src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
+                alt="FisioMirror"
+                className="w-12 h-12 object-contain shrink-0"
+              />
               <div>
                 <p className="text-xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   FisioMirror
