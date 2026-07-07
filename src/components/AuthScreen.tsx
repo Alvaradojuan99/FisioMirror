@@ -135,14 +135,11 @@ export function AuthScreen() {
 
           {/* Brand */}
           <div className="flex flex-col items-center mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <img
-                src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
-                alt="FisioMirror"
-                className="w-12 h-12 object-contain"
-              />
-              <span className="text-xl font-bold text-primary">FisioMirror</span>
-            </div>
+            <img
+              src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
+              alt="FisioMirror"
+              className="w-28 h-28 object-contain mb-1"
+            />
             <h1 className="text-2xl font-bold text-gray-900">{getTitle()}</h1>
           </div>
 

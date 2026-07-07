@@ -37,22 +37,12 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
           <div className="absolute bottom-40 left-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
 
           {/* Brand */}
-          <div className="relative p-6 border-b border-outline-variant/10">
-            <div className="flex items-center gap-3">
-              <img
-                src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
-                alt="FisioMirror"
-                className="w-12 h-12 object-contain shrink-0"
-              />
-              <div>
-                <p className="text-xl font-extrabold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
-                  FisioMirror
-                </p>
-                <p className="text-[10px] uppercase tracking-widest text-outline font-semibold">
-                  Optimismo Terapéutico
-                </p>
-              </div>
-            </div>
+          <div className="relative p-4 border-b border-outline-variant/10 flex justify-center">
+            <img
+              src="/ChatGPT_Image_5_jul_2026,_12_59_59_a.m._(1).png"
+              alt="FisioMirror"
+              className="w-36 h-36 object-contain"
+            />
           </div>
 
           {/* Nav */}
