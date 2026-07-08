@@ -22,6 +22,21 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const PATIENT_KEY = 'telerrehab_patient_session';
+const FISIO_PROFILE_QUERY = 'id, email, full_name, university';
+
+async function fetchFisioProfile(userId: string, retries = 3): Promise<FisioUser | null> {
+  for (let i = 0; i < retries; i++) {
+    const { data, error } = await supabase
+      .from('physiotherapists')
+      .select(FISIO_PROFILE_QUERY)
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data as FisioUser;
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  return null;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
@@ -71,12 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       let fisio: FisioUser | null = null;
       if (session?.user) {
-        const { data } = await supabase
-          .from('physiotherapists')
-          .select('id, email, full_name, university')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        fisio = data as FisioUser | null;
+        fisio = await fetchFisioProfile(session.user.id);
       }
 
       if (!mounted) return;
@@ -98,14 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) setState((s) => (s.role === 'fisio' ? { role: null, fisio: null, patient: null, loading: false } : s));
           return;
         }
-        const { data } = await supabase
-          .from('physiotherapists')
-          .select('id, email, full_name, university')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        const profile = await fetchFisioProfile(session.user.id);
         if (!mounted) return;
-        if (data) {
-          applyState({ role: 'fisio', fisio: data as FisioUser, patient: null, loading: false });
+        if (profile) {
+          applyState({ role: 'fisio', fisio: profile, patient: null, loading: false });
         }
       })();
     });
@@ -119,15 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInFisio = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(translateError(error.message));
+
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data } = await supabase
-        .from('physiotherapists')
-        .select('id, email, full_name, university')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      if (data) applyState({ role: 'fisio', fisio: data as FisioUser, patient: null, loading: false });
-    }
+    if (!session?.user) throw new Error('No se pudo iniciar sesión. Intenta de nuevo.');
+
+    const profile = await fetchFisioProfile(session.user.id);
+    if (!profile) throw new Error('Tu perfil no está configurado. Contacta al administrador.');
+    applyState({ role: 'fisio', fisio: profile, patient: null, loading: false });
   };
 
   const signUpFisio = async (full_name: string, email: string, password: string, university: string) => {
@@ -138,12 +142,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw new Error(translateError(error.message));
     if (!data.user) throw new Error('No se pudo crear la cuenta.');
-    const { data: profile } = await supabase
-      .from('physiotherapists')
-      .select('id, email, full_name, university')
-      .eq('id', data.user.id)
-      .maybeSingle();
-    if (profile) applyState({ role: 'fisio', fisio: profile as FisioUser, patient: null, loading: false });
+
+    // If signUp didn't establish a session (email confirmation required),
+    // try signing in immediately — the auto-confirm trigger should have fired.
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        throw new Error('Cuenta creada. Revisa tu correo para confirmar tu registro, luego inicia sesión.');
+      }
+    }
+
+    // Fetch the profile (retry — trigger may take a moment)
+    const profile = await fetchFisioProfile(data.user.id, 5);
+    if (!profile) throw new Error('La cuenta se creó pero el perfil no está disponible. Intenta iniciar sesión.');
+    applyState({ role: 'fisio', fisio: profile, patient: null, loading: false });
   };
 
   const signOutFisio = async () => {
@@ -211,5 +223,6 @@ function translateError(msg: string): string {
   if (m.includes('user already registered')) return 'Este correo ya está registrado.';
   if (m.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
   if (m.includes('unable to validate email')) return 'Correo electrónico inválido.';
+  if (m.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión.';
   return msg;
 }
