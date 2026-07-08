@@ -131,13 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUpFisio = async (full_name: string, email: string, password: string, university: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name, university } },
+    });
     if (error) throw new Error(translateError(error.message));
     if (!data.user) throw new Error('No se pudo crear la cuenta.');
-    const { error: profileError } = await supabase
-      .from('physiotherapists')
-      .insert({ id: data.user.id, full_name, email, university });
-    if (profileError) throw new Error('Error al crear el perfil: ' + profileError.message);
     const { data: profile } = await supabase
       .from('physiotherapists')
       .select('id, email, full_name, university')
