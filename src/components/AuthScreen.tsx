@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/auth';
-import { AlertCircle, Loader2, ArrowRight, LogIn, UserPlus } from 'lucide-react';
+import { AlertCircle, Loader2, ArrowRight, LogIn, UserPlus, MailCheck, KeyRound, ArrowLeft } from 'lucide-react';
 
 type Tab = 'paciente' | 'fisioterapeuta';
+type FisioView = 'login' | 'register' | 'forgot' | 'verify' | 'reset';
 
-// Estimate how long the GIF plays (ms). Adjust if the GIF is shorter/longer.
 const GIF_DURATION_MS = 4000;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function AuthScreen() {
-  const { signInFisio, signUpFisio, signInPatient, pauseNavigation, resumeNavigation } = useAuth();
+  const { signInFisio, signUpFisio, signInPatient, pauseNavigation, resumeNavigation, resetPassword, resendVerification, updatePassword, passwordRecoveryMode } = useAuth();
 
   const [tab, setTab] = useState<Tab>('paciente');
-  const [showFisioRegister, setShowFisioRegister] = useState(false);
+  const [fisioView, setFisioView] = useState<FisioView>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [gifPhase, setGifPhase] = useState<'idle' | 'fadeOut' | 'showGif'>('idle');
 
   const [loginEmail, setLoginEmail] = useState('');
@@ -25,12 +26,15 @@ export function AuthScreen() {
   const [regPass2, setRegPass2] = useState('');
   const [regUniv, setRegUniv] = useState('');
   const [token, setToken] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [newPass2, setNewPass2] = useState('');
   const [hoverChar, setHoverChar] = useState<Tab | null>(null);
 
-  // Hover overrides the active tab for the illustration highlight
   const activeHighlight: Tab = hoverChar ?? tab;
 
-  const reset = () => setError('');
+  const reset = () => { setError(''); setInfo(''); };
 
   const startGif = () => {
     setGifPhase('fadeOut');
@@ -77,7 +81,12 @@ export function AuthScreen() {
       await waitForGif(gifShowsAt);
       resumeNavigation();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      const msg = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      if (msg.includes('confirmar tu correo')) {
+        setPendingVerifyEmail(loginEmail.trim());
+        setFisioView('verify');
+      }
+      setError(msg);
       setGifPhase('idle');
       setLoading(false);
       resumeNavigation();
@@ -93,32 +102,79 @@ export function AuthScreen() {
     if (regPass !== regPass2) return setError('Las contraseñas no coinciden.');
     if (regUniv.trim().length < 3) return setError('Indica tu universidad o instituto de egreso.');
     setLoading(true);
-    pauseNavigation();
-    const gifShowsAt = Date.now() + 500;
-    startGif();
     try {
       await signUpFisio(regName.trim(), regEmail.trim(), regPass, regUniv.trim());
+      setPendingVerifyEmail(regEmail.trim());
+      setFisioView('verify');
+      setInfo('Cuenta creada. Te enviamos un correo de verificación — revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.');
       setLoading(false);
-      await waitForGif(gifShowsAt);
-      resumeNavigation();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al registrar');
-      setGifPhase('idle');
       setLoading(false);
-      resumeNavigation();
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    reset();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) return setError('Ingresa un correo electrónico válido.');
+    setLoading(true);
+    try {
+      await resetPassword(forgotEmail.trim());
+      setInfo('Te enviamos un enlace de recuperación a tu correo. Revisa tu bandeja de entrada (y spam) y sigue las instrucciones para cambiar tu contraseña.');
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al enviar el correo');
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!pendingVerifyEmail) return;
+    reset();
+    setLoading(true);
+    try {
+      await resendVerification(pendingVerifyEmail);
+      setInfo('Reenviamos el correo de verificación. Revisa tu bandeja de entrada (y spam).');
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al reenviar');
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    reset();
+    if (newPass.length < 6) return setError('La contraseña debe tener al menos 6 caracteres.');
+    if (newPass !== newPass2) return setError('Las contraseñas no coinciden.');
+    setLoading(true);
+    try {
+      await updatePassword(newPass);
+      setInfo('Contraseña actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.');
+      setFisioView('login');
+      setNewPass('');
+      setNewPass2('');
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cambiar la contraseña');
+      setLoading(false);
     }
   };
 
   const switchTab = (t: Tab) => {
     setTab(t);
-    setShowFisioRegister(false);
+    setFisioView('login');
     reset();
     if (gifPhase !== 'idle') setGifPhase('idle');
   };
 
   const getTitle = () => {
+    if (passwordRecoveryMode || fisioView === 'reset') return 'Nueva Contraseña';
     if (tab === 'paciente') return 'Acceso Paciente';
-    if (showFisioRegister) return 'Crear Cuenta';
+    if (fisioView === 'register') return 'Crear Cuenta';
+    if (fisioView === 'forgot') return 'Recuperar Contraseña';
+    if (fisioView === 'verify') return 'Verifica tu Correo';
     return 'Iniciar Sesión';
   };
 
@@ -127,7 +183,6 @@ export function AuthScreen() {
       className="min-h-screen flex items-center justify-center p-4"
       style={{ background: '#4ade80' }}
     >
-      {/* Card */}
       <div className="w-full max-w-[920px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[560px]">
 
         {/* ── LEFT: FORM PANEL ── */}
@@ -144,26 +199,39 @@ export function AuthScreen() {
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-100 rounded-full p-1 mb-6">
+          {tab === 'fisioterapeuta' && fisioView !== 'verify' && !passwordRecoveryMode && (
+            <div className="flex bg-gray-100 rounded-full p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => switchTab('paciente')}
+                className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  activeHighlight === 'paciente' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Paciente
+              </button>
+              <button
+                type="button"
+                onClick={() => switchTab('fisioterapeuta')}
+                className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  activeHighlight === 'fisioterapeuta' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Fisioterapeuta
+              </button>
+            </div>
+          )}
+
+          {/* Back button for sub-views */}
+          {tab === 'fisioterapeuta' && (fisioView === 'forgot' || fisioView === 'verify') && !passwordRecoveryMode && (
             <button
               type="button"
-              onClick={() => switchTab('paciente')}
-              className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                tab === 'paciente' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              onClick={() => { setFisioView('login'); reset(); }}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors"
             >
-              Paciente
+              <ArrowLeft className="w-4 h-4" /> Volver a iniciar sesión
             </button>
-            <button
-              type="button"
-              onClick={() => switchTab('fisioterapeuta')}
-              className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                tab === 'fisioterapeuta' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Fisioterapeuta
-            </button>
-          </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -173,8 +241,63 @@ export function AuthScreen() {
             </div>
           )}
 
+          {/* Info */}
+          {info && (
+            <div className="mb-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-3">
+              <MailCheck className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-green-700">{info}</p>
+            </div>
+          )}
+
+          {/* ── PASSWORD RECOVERY (reset) ── */}
+          {passwordRecoveryMode && (
+            <form onSubmit={handleResetPassword} className="flex flex-col gap-4 flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Ingresa tu nueva contraseña para continuar.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Nueva Contraseña</label>
+                <input
+                  type="password"
+                  required
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-gray-100 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Confirmar Contraseña</label>
+                <input
+                  type="password"
+                  required
+                  value={newPass2}
+                  onChange={(e) => setNewPass2(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-gray-100 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary-container text-white rounded-full py-3.5 font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] disabled:opacity-50 mt-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>CAMBIAR CONTRASEÑA <KeyRound className="w-5 h-5" /></>
+                )}
+              </button>
+            </form>
+          )}
+
           {/* ── PATIENT FORM ── */}
-          {tab === 'paciente' && (
+          {tab === 'paciente' && !passwordRecoveryMode && (
             <form onSubmit={handlePatientLogin} className="flex flex-col gap-5 flex-1">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">
@@ -207,7 +330,7 @@ export function AuthScreen() {
                 ¿No tienes cuenta?{' '}
                 <button
                   type="button"
-                  onClick={() => { setTab('fisioterapeuta'); setShowFisioRegister(true); reset(); }}
+                  onClick={() => { setTab('fisioterapeuta'); setFisioView('register'); reset(); }}
                   className="text-primary font-semibold hover:underline"
                 >
                   Regístrate aquí
@@ -217,7 +340,7 @@ export function AuthScreen() {
           )}
 
           {/* ── FISIO LOGIN ── */}
-          {tab === 'fisioterapeuta' && !showFisioRegister && (
+          {tab === 'fisioterapeuta' && fisioView === 'login' && !passwordRecoveryMode && (
             <form onSubmit={handleFisioLogin} className="flex flex-col gap-4 flex-1">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">Email</label>
@@ -243,6 +366,14 @@ export function AuthScreen() {
               </div>
 
               <button
+                type="button"
+                onClick={() => { setFisioView('forgot'); reset(); setForgotEmail(loginEmail); }}
+                className="self-end text-xs text-primary font-medium hover:underline transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+
+              <button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-primary hover:bg-primary-container text-white rounded-full py-3.5 font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] disabled:opacity-50 mt-2"
@@ -258,7 +389,7 @@ export function AuthScreen() {
                 ¿No tienes cuenta?{' '}
                 <button
                   type="button"
-                  onClick={() => { setShowFisioRegister(true); reset(); }}
+                  onClick={() => { setFisioView('register'); reset(); }}
                   className="text-primary font-semibold hover:underline"
                 >
                   Regístrate aquí
@@ -268,7 +399,7 @@ export function AuthScreen() {
           )}
 
           {/* ── FISIO REGISTER ── */}
-          {tab === 'fisioterapeuta' && showFisioRegister && (
+          {tab === 'fisioterapeuta' && fisioView === 'register' && !passwordRecoveryMode && (
             <form onSubmit={handleFisioRegister} className="flex flex-col gap-3.5 flex-1">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">Nombre Completo</label>
@@ -298,6 +429,10 @@ export function AuthScreen() {
                   className="w-full bg-gray-100 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
               </div>
 
+              <p className="text-xs text-gray-400 text-center px-2">
+                Te enviaremos un correo de verificación para confirmar tu cuenta.
+              </p>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -312,12 +447,83 @@ export function AuthScreen() {
 
               <p className="text-center text-sm text-gray-500">
                 ¿Ya tienes cuenta?{' '}
-                <button type="button" onClick={() => { setShowFisioRegister(false); reset(); }}
+                <button type="button" onClick={() => { setFisioView('login'); reset(); }}
                   className="text-primary font-semibold hover:underline">
                   Inicia sesión aquí
                 </button>
               </p>
             </form>
+          )}
+
+          {/* ── FISIO FORGOT PASSWORD ── */}
+          {tab === 'fisioterapeuta' && fisioView === 'forgot' && !passwordRecoveryMode && (
+            <form onSubmit={handleForgotPassword} className="flex flex-col gap-4 flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Ingresa tu correo y te enviaremos un enlace para cambiar tu contraseña.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="tu@correo.com"
+                  className="w-full bg-gray-100 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary-container text-white rounded-full py-3.5 font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] disabled:opacity-50 mt-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>ENVIAR ENLACE <ArrowRight className="w-5 h-5" /></>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* ── FISIO VERIFY EMAIL ── */}
+          {tab === 'fisioterapeuta' && fisioView === 'verify' && !passwordRecoveryMode && (
+            <div className="flex flex-col gap-4 flex-1 items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-green-50 border border-green-200 flex items-center justify-center mt-4">
+                <MailCheck className="w-8 h-8 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-600 px-4">
+                Hemos enviado un correo de verificación a{' '}
+                <span className="font-semibold text-gray-800">{pendingVerifyEmail}</span>.
+                Revisa tu bandeja de entrada (y la carpeta de spam) y haz clic en el enlace para activar tu cuenta.
+              </p>
+              <p className="text-xs text-gray-400">
+                Después de verificar tu correo, vuelve e inicia sesión.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={loading}
+                className="text-sm text-primary font-semibold hover:underline disabled:opacity-50 transition-colors"
+              >
+                {loading ? 'Reenviando...' : 'Reenviar correo de verificación'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setFisioView('login'); reset(); }}
+                className="w-full bg-primary hover:bg-primary-container text-white rounded-full py-3.5 font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] mt-2"
+              >
+                INICIAR SESIÓN <LogIn className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -326,16 +532,6 @@ export function AuthScreen() {
           className="relative lg:w-[420px] min-h-[300px] lg:min-h-auto flex-shrink-0 hidden lg:block overflow-hidden"
           style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%)' }}
         >
-          {/*
-           * Layer stack (bottom → top):
-           * 1. Base image — slightly dimmed when a highlight is active
-           * 2. Inactive dim overlay (gradient, per character zone)
-           * 3. Neon glow layers — mask-image constrains the zone, drop-shadow
-           *    traces the actual alpha channel of each character's silhouette
-           * 4. GIF — replaces everything on submit
-           * 5. Hover zones — transparent interactive areas
-           */}
-
           {/* 1 — Base image */}
           <img
             src="/Gemini_Generated_Image_xslwpzxslwpzxslw_(1).png"
@@ -370,16 +566,7 @@ export function AuthScreen() {
             }}
           />
 
-          {/*
-           * 3 — FISIOTERAPEUTA neon glow
-           *
-           * How it works:
-           * - The img renders at full size with filter: drop-shadow, which uses
-           *   the PNG's alpha channel to trace the exact silhouette of all pixels.
-           * - mask-image creates a LEFT-to-RIGHT soft fade, constraining the
-           *   visible glow to the therapist's zone without a hard geometric cut.
-           * - The wrapper's opacity transitions animate the whole effect.
-           */}
+          {/* 3 — FISIOTERAPEUTA neon glow */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -407,12 +594,7 @@ export function AuthScreen() {
             />
           </div>
 
-          {/*
-           * 3 — PACIENTE neon glow
-           *
-           * Same technique mirrored: mask fades left-to-right from transparent
-           * on the left to opaque on the right, isolating the patient's zone.
-           */}
+          {/* 3 — PACIENTE neon glow */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{

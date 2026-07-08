@@ -17,6 +17,11 @@ interface AuthContextValue extends AuthState {
   signOutPatient: () => void;
   pauseNavigation: () => void;
   resumeNavigation: () => void;
+  resetPassword: (email: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  passwordRecoveryMode: boolean;
+  clearPasswordRecovery: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -45,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     patient: null,
     loading: true,
   });
+  const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(false);
 
   const navigationPausedRef = useRef(false);
   const pendingStateRef = useRef<AuthState | null>(null);
@@ -102,8 +108,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     init();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
+        if (event === 'PASSWORD_RECOVERY') {
+          if (mounted) setPasswordRecoveryMode(true);
+          return;
+        }
         if (!session?.user) {
           if (mounted) setState((s) => (s.role === 'fisio' ? { role: null, fisio: null, patient: null, loading: false } : s));
           return;
@@ -142,20 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw new Error(translateError(error.message));
     if (!data.user) throw new Error('No se pudo crear la cuenta.');
-
-    // If signUp didn't establish a session (email confirmation required),
-    // try signing in immediately — the auto-confirm trigger should have fired.
-    if (!data.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        throw new Error('Cuenta creada. Revisa tu correo para confirmar tu registro, luego inicia sesión.');
-      }
-    }
-
-    // Fetch the profile (retry — trigger may take a moment)
-    const profile = await fetchFisioProfile(data.user.id, 5);
-    if (!profile) throw new Error('La cuenta se creó pero el perfil no está disponible. Intenta iniciar sesión.');
-    applyState({ role: 'fisio', fisio: profile, patient: null, loading: false });
+    // Email verification is required — the trigger creates the profile row,
+    // but the user must verify their email before they can log in.
   };
 
   const signOutFisio = async () => {
@@ -195,6 +193,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ role: null, fisio: null, patient: null, loading: false });
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw new Error(translateError(error.message));
+  };
+
+  const resendVerification = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw new Error(translateError(error.message));
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(translateError(error.message));
+    setPasswordRecoveryMode(false);
+    await supabase.auth.signOut();
+    setState({ role: null, fisio: null, patient: null, loading: false });
+  };
+
+  const clearPasswordRecovery = () => {
+    setPasswordRecoveryMode(false);
+  };
+
   return (
     <AuthContext.Provider value={{
       ...state,
@@ -205,6 +231,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOutPatient,
       pauseNavigation,
       resumeNavigation,
+      resetPassword,
+      resendVerification,
+      updatePassword,
+      passwordRecoveryMode,
+      clearPasswordRecovery,
     }}>
       {children}
     </AuthContext.Provider>
@@ -223,6 +254,7 @@ function translateError(msg: string): string {
   if (m.includes('user already registered')) return 'Este correo ya está registrado.';
   if (m.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
   if (m.includes('unable to validate email')) return 'Correo electrónico inválido.';
-  if (m.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión.';
+  if (m.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.';
+  if (m.includes('rate limit')) return 'Demasiados intentos. Espera unos minutos antes de intentar de nuevo.';
   return msg;
 }
