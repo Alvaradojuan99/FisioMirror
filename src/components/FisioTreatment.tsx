@@ -80,7 +80,7 @@ export function FisioTreatment({ onNavigate }: { onNavigate: (v: FisioView) => v
   return (
     <div>
       {/* Header */}
-      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20 sticky top-0 z-30">
+      <header className="bg-surface px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20 sticky top-0 z-30">
         <button onClick={() => onNavigate('dashboard')} className="p-2 rounded-lg hover:bg-surface-container">
           <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
         </button>
@@ -111,7 +111,7 @@ export function FisioTreatment({ onNavigate }: { onNavigate: (v: FisioView) => v
         </button>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-6xl">
+      <div className="p-8 space-y-8 max-w-6xl">
         {patients.length === 0 ? (
           <div className="bg-surface-container-lowest rounded-4xl p-12 text-center border border-outline-variant/20">
             <span className="material-symbols-outlined text-outline mx-auto mb-3" style={{ fontSize: 48 }}>contact_page</span>

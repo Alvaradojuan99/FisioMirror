@@ -61,7 +61,7 @@ export function PatientAchievements() {
   return (
     <div>
       {/* Header */}
-      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30">
+      <header className="bg-surface px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30">
         <h1 className="text-lg font-semibold text-on-surface">Progreso y Logros</h1>
         <div className="bg-primary-fixed rounded-full px-4 py-1.5 flex items-center gap-2">
           <span className="material-symbols-outlined fill text-primary" style={{ fontSize: 18 }}>local_fire_department</span>
@@ -70,7 +70,7 @@ export function PatientAchievements() {
         <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 28 }}>account_circle</span>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 max-w-7xl">
+      <div className="p-8 space-y-6 max-w-7xl">
         {/* Hero */}
         <div className="bg-primary-container rounded-3xl p-8 shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>

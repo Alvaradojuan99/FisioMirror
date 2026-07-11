@@ -514,7 +514,7 @@ export function PatientSession({ autoStart = false }: { autoStart?: boolean }) {
   // Routine selection
   return (
     <div>
-      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30 backdrop-blur bg-background/80">
+      <header className="bg-surface px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30 backdrop-blur bg-background/80">
         <h1 className="text-lg font-semibold text-on-surface">Mis Sesiones de Terapia</h1>
         <div className="flex-1 max-w-md relative ml-4">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style={{ fontSize: 20 }}>search</span>
@@ -523,7 +523,7 @@ export function PatientSession({ autoStart = false }: { autoStart?: boolean }) {
         <button className="p-2 rounded-lg hover:bg-surface-container"><span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 22 }}>notifications</span></button>
       </header>
 
-      <div className="p-4 sm:p-8 grid grid-cols-12 gap-4 sm:gap-6 max-w-7xl">
+      <div className="p-8 grid grid-cols-12 gap-6 max-w-7xl">
         {/* Left: Featured + exercises */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
           {todayRoutines.length > 0 ? (

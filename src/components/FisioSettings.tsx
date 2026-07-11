@@ -6,11 +6,11 @@ export function FisioSettings({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div>
-      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20">
+      <header className="bg-surface px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20">
         <h1 className="text-lg font-semibold text-on-surface">Configuración</h1>
       </header>
 
-      <div className="p-4 sm:p-8 max-w-2xl">
+      <div className="p-8 max-w-2xl">
         <div className="bg-surface-container-lowest rounded-4xl p-6 border border-outline-variant/20">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary font-bold text-2xl">

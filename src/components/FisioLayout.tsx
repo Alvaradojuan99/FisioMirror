@@ -1,6 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
-export type FisioView = 'dashboard' | 'pacientes' | 'puente' | 'library' | 'configuracion';
+export type FisioView = 'dashboard' | 'pacientes' | 'puente' | 'library' | 'asistente' | 'configuracion';
 
 interface Props {
   children: ReactNode;
@@ -13,9 +13,10 @@ interface Props {
 const navItems: { key: FisioView; label: string; icon: string; color: string }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: 'dashboard', color: 'from-emerald-500 to-teal-600' },
   { key: 'pacientes', label: 'Pacientes', icon: 'person', color: 'from-blue-500 to-indigo-600' },
-  { key: 'puente', label: 'Puente', icon: 'sync', color: 'from-amber-500 to-orange-600' },
+  { key: 'puente', label: 'Puente de Acceso', icon: 'sync', color: 'from-amber-500 to-orange-600' },
   { key: 'library', label: 'Library', icon: 'local_library', color: 'from-purple-500 to-pink-600' },
-  { key: 'configuracion', label: 'Ajustes', icon: 'settings', color: 'from-gray-500 to-slate-600' },
+  { key: 'asistente', label: 'Asistente IA', icon: 'smart_toy', color: 'from-teal-500 to-cyan-600' },
+  { key: 'configuracion', label: 'Configuración', icon: 'settings', color: 'from-gray-500 to-slate-600' },
 ];
 
 export function FisioLayout({ children, current, onNavigate, onSignOut, fisioName }: Props) {
@@ -26,9 +27,9 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
       {/* Background pattern */}
       <div className="fixed inset-0 pattern-grid opacity-30 pointer-events-none" />
 
-      {/* Sidebar — hidden on mobile, shown on desktop */}
-      <aside className="fixed left-0 top-0 bottom-0 w-72 z-40 hidden lg:flex">
-        <div className="h-full glass-card rounded-none rounded-r-3xl border-l-0 flex flex-col relative overflow-hidden w-full">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 bottom-0 w-72 z-40">
+        <div className="h-full glass-card rounded-none rounded-r-3xl border-l-0 flex flex-col relative overflow-hidden">
           {/* Animated gradient background */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
@@ -64,14 +65,17 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
                   }`}
                   style={{ animationDelay: `${index * 0.05}s`, opacity: 0 }}
                 >
+                  {/* Active indicator */}
                   {active && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 gradient-primary rounded-r-full" />
                   )}
 
+                  {/* Hover glow */}
                   {hovered && !active && (
                     <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-5 rounded-2xl transition-opacity`} />
                   )}
 
+                  {/* Icon container */}
                   <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                     active
                       ? `bg-gradient-to-br ${item.color} text-white shadow-lg`
@@ -86,6 +90,7 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
                       {item.icon}
                     </span>
 
+                    {/* Icon glow on active */}
                     {active && (
                       <div className="absolute inset-0 rounded-xl opacity-50 animate-ping">
                         <div className={`w-full h-full bg-gradient-to-br ${item.color} rounded-xl`} />
@@ -93,10 +98,12 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
                     )}
                   </div>
 
+                  {/* Label */}
                   <span className={`transition-all duration-300 ${active ? 'translate-x-1' : ''}`}>
                     {item.label}
                   </span>
 
+                  {/* Arrow on active */}
                   {active && (
                     <span className="material-symbols-outlined ml-auto text-primary animate-fade-in" style={{ fontSize: 18 }}>
                       chevron_right
@@ -110,10 +117,12 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
           {/* User card */}
           <div className="p-4 border-t border-outline-variant/10 relative">
             <div className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-2xl border border-white/50 shadow-sm">
+              {/* Avatar */}
               <div className="relative">
                 <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
                   {fisioName.charAt(0).toUpperCase()}
                 </div>
+                {/* Online indicator */}
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse-soft" />
               </div>
 
@@ -126,6 +135,7 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
               </div>
             </div>
 
+            {/* Sign out button */}
             <button
               onClick={onSignOut}
               className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-outline hover:bg-error/10 hover:text-error transition-all duration-300 group relative overflow-hidden"
@@ -139,9 +149,9 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
       </aside>
 
       {/* Main content area */}
-      <main className="flex-1 lg:ml-72 min-h-screen pb-24 lg:pb-0 relative">
+      <main className="flex-1 ml-72 min-h-screen relative">
         {/* Subtle gradient overlay */}
-        <div className="fixed inset-0 lg:left-72 pointer-events-none">
+        <div className="fixed inset-0 ml-72 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/3 w-80 h-80 bg-secondary/5 rounded-full blur-3xl" />
         </div>
@@ -151,30 +161,6 @@ export function FisioLayout({ children, current, onNavigate, onSignOut, fisioNam
           {children}
         </div>
       </main>
-
-      {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-lg border-t border-outline-variant/20 px-2 py-2 flex items-center justify-around" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
-        {navItems.map((item) => {
-          const active = current === item.key;
-          return (
-            <button
-              key={item.key}
-              onClick={() => onNavigate(item.key)}
-              className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1 ${
-                active ? 'text-primary' : 'text-on-surface-variant'
-              }`}
-            >
-              <span
-                className={`material-symbols-outlined ${active ? 'fill' : ''}`}
-                style={{ fontSize: 22 }}
-              >
-                {item.icon}
-              </span>
-              <span className="text-[10px] font-medium truncate">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 }

@@ -220,7 +220,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
   return (
     <div>
       {/* Header */}
-      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20">
+      <header className="bg-surface px-8 py-4 flex items-center gap-4 border-b border-outline-variant/20">
         <button onClick={() => onNavigate('dashboard')} className="p-2 rounded-lg hover:bg-surface-container">
           <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
         </button>
@@ -247,7 +247,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
         <button className="p-2 rounded-lg hover:bg-surface-container"><span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 22 }}>help_outline</span></button>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-6xl">
+      <div className="p-8 space-y-8 max-w-6xl">
         {/* Generated Token Highlight */}
         {generatedToken && (
           <div className="bg-surface-container-lowest rounded-4xl p-8 border border-outline-variant/20 shadow-lg animate-scale-in relative overflow-hidden">
