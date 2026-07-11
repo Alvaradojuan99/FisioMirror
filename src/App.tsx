@@ -6,6 +6,7 @@ import { FisioDashboard } from './components/FisioDashboard';
 import { FisioPatients } from './components/FisioPatients';
 import { FisioTreatment } from './components/FisioTreatment';
 import { FisioFollowup } from './components/FisioFollowup';
+import { FisioAI } from './components/FisioAI';
 import { FisioSettings } from './components/FisioSettings';
 import { PatientLayout, type PatientView } from './components/PatientLayout';
 import { PatientOnboarding } from './components/PatientOnboarding';
@@ -37,6 +38,7 @@ function AppContent() {
         {fisioView === 'pacientes' && <FisioPatients onNavigate={setFisioView} />}
         {fisioView === 'puente' && <FisioTreatment onNavigate={setFisioView} />}
         {fisioView === 'library' && <FisioFollowup onNavigate={setFisioView} />}
+        {fisioView === 'asistente' && <FisioAI onNavigate={setFisioView} />}
         {fisioView === 'configuracion' && <FisioSettings onSignOut={signOutFisio} />}
       </FisioLayout>
     );

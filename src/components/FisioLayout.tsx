@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 
-export type FisioView = 'dashboard' | 'pacientes' | 'puente' | 'library' | 'configuracion';
+export type FisioView = 'dashboard' | 'pacientes' | 'puente' | 'library' | 'asistente' | 'configuracion';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +15,7 @@ const navItems: { key: FisioView; label: string; icon: string; color: string }[]
   { key: 'pacientes', label: 'Pacientes', icon: 'person', color: 'from-blue-500 to-indigo-600' },
   { key: 'puente', label: 'Puente de Acceso', icon: 'sync', color: 'from-amber-500 to-orange-600' },
   { key: 'library', label: 'Library', icon: 'local_library', color: 'from-purple-500 to-pink-600' },
+  { key: 'asistente', label: 'Asistente IA', icon: 'smart_toy', color: 'from-teal-500 to-cyan-600' },
   { key: 'configuracion', label: 'Configuración', icon: 'settings', color: 'from-gray-500 to-slate-600' },
 ];
 
