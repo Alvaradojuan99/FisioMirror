@@ -1,15 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase, generateToken } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
-import type { Patient, AccessToken } from '../lib/types';
+import type { Patient, AccessToken, Exercise } from '../lib/types';
 import type { FisioView } from './FisioLayout';
-
-interface ExtractedData {
-  full_name: string;
-  age: string;
-  condition: string;
-  notes: string;
-}
+import { extractRecipeData, type ExtractedRecipeData } from '../lib/recipeOcr';
 
 export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => void }) {
   const { fisio } = useAuth();
@@ -29,11 +23,12 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [extracting, setExtracting] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [uploadError, setUploadError] = useState('');
+  const [ocrProgress, setOcrProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ full_name: '', age: '', condition: '', notes: '' });
+  const [extractedExercises, setExtractedExercises] = useState<Exercise[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,9 +38,9 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
     if (!file) return;
 
     // Validate file type
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
-      setUploadError('Formato no válido. Use PNG, JPG o PDF.');
+      setUploadError('Formato no válido. Use PNG o JPG para extracción con IA.');
       return;
     }
 
@@ -57,6 +52,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
 
     setSelectedFile(file);
     setUploadError('');
+    setOcrProgress(0);
 
     // Create preview for images
     if (file.type.startsWith('image/')) {
@@ -64,37 +60,25 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
       reader.onload = (e) => setFilePreview(e.target?.result as string);
       reader.readAsDataURL(file);
     } else {
-      // PDF preview
       setFilePreview('pdf');
     }
   };
 
-  // Simulate AI extraction (in production, this would call an AI service)
-  const extractDataFromDocument = async (file: File): Promise<ExtractedData> => {
+  // Extract data from recipe image using OCR (Tesseract.js)
+  const extractDataFromDocument = async (file: File): Promise<ExtractedRecipeData> => {
     setExtracting(true);
+    setOcrProgress(0);
 
-    // Simulate processing delay - in production this would be an API call
-    await new Promise((r) => setTimeout(r, 2500));
-
-    // In production, this would:
-    // 1. Upload file to Supabase Storage
-    // 2. Call an AI API (OpenAI Vision, Google Document AI, or similar)
-    // 3. Parse the extracted text and structure it
-
-    // For demo purposes, return placeholder data to show the flow
-    // The user will need to fill/edit these values
-    const simulatedData: ExtractedData = {
-      full_name: '',
-      age: '',
-      condition: '',
-      notes: 'Documento procesado. Por favor, complete los datos del paciente.'
-    };
-
-    setExtracting(false);
-    return simulatedData;
+    try {
+      const data = await extractRecipeData(file);
+      setOcrProgress(100);
+      return data;
+    } finally {
+      setExtracting(false);
+    }
   };
 
-  // Process recipe with AI and auto-fill form
+  // Process recipe with OCR and auto-fill form
   const handleRecipeProcess = async () => {
     if (!selectedFile) return;
 
@@ -102,24 +86,23 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
     setUploadError('');
 
     try {
-      // Extract data from document using AI
       const data = await extractDataFromDocument(selectedFile);
-      setExtractedData(data);
 
       // Auto-fill form with extracted data
       setForm({
         full_name: data.full_name || '',
         age: data.age || '',
         condition: data.condition || '',
-        notes: data.notes || ''
+        notes: data.notes || '',
       });
+      setExtractedExercises(data.exercises || []);
 
       // Close upload modal and open form
       setShowRecipeUpload(false);
       setShowForm(true);
       resetRecipeUpload();
     } catch (err) {
-      setUploadError('Error al procesar el documento. Intente nuevamente.');
+      setUploadError(err instanceof Error ? err.message : 'Error al procesar el documento. Intente nuevamente.');
     } finally {
       setUploading(false);
     }
@@ -129,7 +112,6 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
   const resetRecipeUpload = () => {
     setSelectedFile(null);
     setFilePreview(null);
-    setExtractedData(null);
     setUploadError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -140,6 +122,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
   const openRecipeUpload = () => {
     setShowRecipeUpload(true);
     setGeneratedToken(null);
+    setExtractedExercises([]);
   };
 
   // Load patients data
@@ -179,6 +162,19 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
         .select().single();
       if (pErr) throw pErr;
 
+      // Auto-create routine with extracted exercises (if any)
+      if (extractedExercises.length > 0) {
+        const { error: rErr } = await supabase.from('routines').insert({
+          patient_id: patient.id,
+          physio_id: fisio.id,
+          title: `Rutina extraída del récipe - ${form.full_name.trim()}`,
+          description: 'Generada automáticamente desde el documento cargado',
+          exercises: extractedExercises,
+          day_of_week: new Date().getDay(),
+        });
+        if (rErr) console.error('Error creating routine from recipe:', rErr);
+      }
+
       let token = generateToken(6);
       let attempts = 0;
       while (attempts < 10) {
@@ -193,6 +189,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
 
       setGeneratedToken(token);
       setForm({ full_name: '', age: '', condition: '', notes: '' });
+      setExtractedExercises([]);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al registrar paciente');
@@ -375,6 +372,28 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
               </div>
             )}
             <form onSubmit={handleCreate} className="space-y-4">
+              {extractedExercises.length > 0 && (
+                <div className="mb-4 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-primary" style={{ fontSize: 20 }}>auto_awesome</span>
+                    <p className="text-sm font-medium text-primary">Ejercicios extraídos del récipe ({extractedExercises.length})</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {extractedExercises.map((ex, i) => (
+                      <div key={ex.id || i} className="flex items-center gap-2 text-xs text-on-surface-variant">
+                        <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center font-semibold text-primary">{i + 1}</span>
+                        <span className="flex-1 font-medium">{ex.name}</span>
+                        <span className="text-outline">{ex.reps} reps · {ex.duration_sec}s</span>
+                        <button type="button" onClick={() => setExtractedExercises(extractedExercises.filter((_, idx) => idx !== i))}
+                          className="p-0.5 text-error hover:bg-error/10 rounded">
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-outline mt-2">Se creará una rutina con estos ejercicios al registrar al paciente.</p>
+                </div>
+              )}
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600 ml-1">Nombre Completo</label>
                 <input type="text" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="María González" className="w-full px-4 py-3 bg-[#e8f5ed] border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-[#10b981] transition-all duration-200 outline-none" />
@@ -394,7 +413,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
                 <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observaciones..." rows={3} className="w-full px-4 py-3 bg-[#e8f5ed] border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-[#10b981] transition-all duration-200 outline-none resize-none" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-full border border-outline-variant text-sm font-medium text-on-surface-variant hover:bg-surface-container">Cancelar</button>
+                <button type="button" onClick={() => { setShowForm(false); setExtractedExercises([]); }} className="flex-1 py-3 rounded-full border border-outline-variant text-sm font-medium text-on-surface-variant hover:bg-surface-container">Cancelar</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-[#00966d] hover:bg-[#007a58] text-white font-bold py-3 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md uppercase disabled:opacity-50">
                   {saving ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: 20 }}>progress_activity</span> : <>Registrar <span className="material-symbols-outlined">arrow_forward</span></>}
                 </button>
@@ -480,7 +499,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".png,.jpg,.jpeg,.pdf"
+                accept=".png,.jpg,.jpeg"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -495,13 +514,13 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
                         <p className="text-sm text-outline">{selectedFile && (selectedFile.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </div>
-                  ) : (
+                  ) : filePreview ? (
                     <img
                       src={filePreview}
                       alt="Preview"
                       className="max-h-64 mx-auto rounded-xl shadow-md"
                     />
-                  )}
+                  ) : null}
                   <p className="text-sm text-primary">Click para cambiar archivo</p>
                 </div>
               ) : (
@@ -511,22 +530,27 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
                   </div>
                   <div>
                     <p className="font-medium text-on-surface">Arrastra tu archivo aquí o haz click</p>
-                    <p className="text-sm text-outline mt-1">PNG, JPG o PDF hasta 10MB</p>
+                    <p className="text-sm text-outline mt-1">PNG o JPG hasta 10MB</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Processing indicator */}
-            {extracting && (
+            {(extracting || uploading) && (
               <div className="mt-6 bg-primary/10 rounded-2xl p-4">
                 <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-primary animate-spin" style={{ fontSize: 24 }}>progress_activity</span>
                   <div>
-                    <p className="font-medium text-primary">Procesando documento con IA...</p>
-                    <p className="text-sm text-outline">Extrayendo nombre, edad, patología y restricciones</p>
+                    <p className="font-medium text-primary">{extracting ? 'Procesando documento con OCR...' : 'Procesando...'}</p>
+                    <p className="text-sm text-outline">Extrayendo nombre, edad, patología y ejercicios del récipe médico</p>
                   </div>
                 </div>
+                {ocrProgress > 0 && ocrProgress < 100 && (
+                  <div className="mt-3 h-1.5 bg-primary/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%` }} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -561,7 +585,7 @@ export function FisioPatients({ onNavigate }: { onNavigate: (v: FisioView) => vo
             {/* Info */}
             <div className="mt-4 flex items-start gap-2 text-xs text-outline">
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>info</span>
-              <p>La IA analizará el documento y sugerirá datos para el registro del paciente. Podrás editarlos antes de guardar.</p>
+              <p>El OCR analizará la imagen del documento y extraerá los datos del paciente y los ejercicios prescritos. Podrás editarlos antes de guardar.</p>
             </div>
           </div>
         </div>
