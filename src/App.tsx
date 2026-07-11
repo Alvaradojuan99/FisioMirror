@@ -6,7 +6,6 @@ import { FisioDashboard } from './components/FisioDashboard';
 import { FisioPatients } from './components/FisioPatients';
 import { FisioTreatment } from './components/FisioTreatment';
 import { FisioFollowup } from './components/FisioFollowup';
-import { FisioAI } from './components/FisioAI';
 import { FisioSettings } from './components/FisioSettings';
 import { PatientLayout, type PatientView } from './components/PatientLayout';
 import { PatientOnboarding } from './components/PatientOnboarding';
@@ -14,6 +13,7 @@ import { PatientDashboard } from './components/PatientDashboard';
 import { PatientSession } from './components/PatientSession';
 import { PatientAchievements } from './components/PatientAchievements';
 import { PatientSettings } from './components/PatientSettings';
+import { FisioAI } from './components/FisioAI';
 
 function AppContent() {
   const { role, fisio, patient, loading, signOutFisio, signOutPatient } = useAuth();
@@ -38,7 +38,6 @@ function AppContent() {
         {fisioView === 'pacientes' && <FisioPatients onNavigate={setFisioView} />}
         {fisioView === 'puente' && <FisioTreatment onNavigate={setFisioView} />}
         {fisioView === 'library' && <FisioFollowup onNavigate={setFisioView} />}
-        {fisioView === 'asistente' && <FisioAI onNavigate={setFisioView} />}
         {fisioView === 'configuracion' && <FisioSettings onSignOut={signOutFisio} />}
       </FisioLayout>
     );
@@ -54,6 +53,7 @@ function AppContent() {
         {patientView === 'dashboard' && <PatientDashboard onNavigate={(v, opts) => { setAutoStartSession(opts?.autoStart ?? false); setPatientView(v); }} />}
         {patientView === 'sesiones' && <PatientSession autoStart={autoStartSession} />}
         {patientView === 'progreso' && <PatientAchievements />}
+        {patientView === 'asistente' && <FisioAI onNavigate={setPatientView} />}
         {patientView === 'ajustes' && <PatientSettings onSignOut={() => { signOutPatient(); setOnboardingDone(false); }} />}
       </PatientLayout>
     );

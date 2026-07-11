@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 
-export type PatientView = 'dashboard' | 'sesiones' | 'progreso' | 'ajustes';
+export type PatientView = 'dashboard' | 'sesiones' | 'progreso' | 'asistente' | 'ajustes';
 
 interface Props {
   children: ReactNode;
@@ -14,6 +14,7 @@ const navItems: { key: PatientView; label: string; icon: string; gradient: strin
   { key: 'dashboard', label: 'Dashboard', icon: 'dashboard', gradient: 'from-emerald-500 to-teal-600' },
   { key: 'sesiones', label: 'Sesiones', icon: 'play_circle', gradient: 'from-blue-500 to-indigo-600' },
   { key: 'progreso', label: 'Progreso', icon: 'trending_up', gradient: 'from-amber-500 to-orange-600' },
+  { key: 'asistente', label: 'Asistente IA', icon: 'smart_toy', gradient: 'from-teal-500 to-cyan-600' },
   { key: 'ajustes', label: 'Ajustes', icon: 'settings', gradient: 'from-gray-500 to-slate-600' },
 ];
 

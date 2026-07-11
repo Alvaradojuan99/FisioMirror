@@ -57,7 +57,7 @@ export function FisioDashboard({ onNavigate }: { onNavigate: (v: FisioView) => v
     <div className="min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-outline-variant/10">
-        <div className="px-8 py-4 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 flex items-center justify-between">
           {/* Search */}
           <div className="flex-1 max-w-lg relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
@@ -100,7 +100,7 @@ export function FisioDashboard({ onNavigate }: { onNavigate: (v: FisioView) => v
 
         {/* Filters bar */}
         {showFilters && (
-          <div className="px-8 py-4 bg-surface-container-low/50 border-t border-outline-variant/10 animate-fade-in">
+          <div className="px-4 sm:px-8 py-4 bg-surface-container-low/50 border-t border-outline-variant/10 animate-fade-in">
             <div className="flex items-center gap-4">
               <span className="text-sm font-semibold text-on-surface-variant">Filtrar por:</span>
               <select
@@ -125,7 +125,7 @@ export function FisioDashboard({ onNavigate }: { onNavigate: (v: FisioView) => v
       </header>
 
       {/* Content */}
-      <div className="p-8 space-y-8 relative">
+      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 relative">
         {/* Welcome header */}
         <div className="relative animate-fade-in-up">
           <h1 className="text-4xl font-extrabold bg-gradient-to-r from-primary via-primary-container to-secondary bg-clip-text text-transparent">

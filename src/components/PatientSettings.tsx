@@ -63,12 +63,12 @@ export function PatientSettings({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div>
-      <header className="bg-surface px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30">
+      <header className="bg-surface px-4 sm:px-8 py-4 flex items-center justify-between border-b border-outline-variant/20 sticky top-0 z-30">
         <h1 className="text-lg font-semibold text-on-surface">Platform Settings</h1>
         <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 28 }}>account_circle</span>
       </header>
 
-      <div className="p-8 space-y-6 max-w-5xl">
+      <div className="p-4 sm:p-8 space-y-6 max-w-5xl">
         <div>
           <h2 className="text-3xl font-bold text-on-surface">Platform Settings</h2>
           <p className="text-on-surface-variant mt-1 max-w-2xl">Gestiona tu cuenta, calibración AR y preferencias de la plataforma.</p>
