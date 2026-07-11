@@ -198,8 +198,8 @@ export function AuthScreen() {
             <h1 className="text-2xl font-bold text-gray-900">{getTitle()}</h1>
           </div>
 
-          {/* Tabs */}
-          {tab === 'fisioterapeuta' && fisioView !== 'verify' && !passwordRecoveryMode && (
+          {/* Tabs — shown on both login views, hidden on register/forgot/verify/recovery */}
+          {!passwordRecoveryMode && (tab === 'paciente' || (tab === 'fisioterapeuta' && fisioView === 'login')) && (
             <div className="flex bg-gray-100 rounded-full p-1 mb-6">
               <button
                 type="button"
