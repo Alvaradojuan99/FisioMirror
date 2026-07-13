@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { FisioView } from './FisioLayout';
+import type { PatientView } from './PatientLayout';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -21,7 +21,7 @@ const TIPS = [
   { title: 'Postura al sentarse', text: 'Mantén los pies apoyados, espalda recta y hombros relajados. Evita cruzar las piernas por largos periodos.' },
 ];
 
-export function FisioAI({ onNavigate }: { onNavigate: (v: FisioView) => void }) {
+export function FisioAI({ onNavigate }: { onNavigate: (v: PatientView) => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

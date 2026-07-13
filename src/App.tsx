@@ -38,7 +38,6 @@ function AppContent() {
         {fisioView === 'pacientes' && <FisioPatients onNavigate={setFisioView} />}
         {fisioView === 'puente' && <FisioTreatment onNavigate={setFisioView} />}
         {fisioView === 'library' && <FisioFollowup onNavigate={setFisioView} />}
-        {fisioView === 'asistente' && <FisioAI onNavigate={setFisioView} />}
         {fisioView === 'configuracion' && <FisioSettings onSignOut={signOutFisio} />}
       </FisioLayout>
     );
@@ -54,6 +53,7 @@ function AppContent() {
         {patientView === 'dashboard' && <PatientDashboard onNavigate={(v, opts) => { setAutoStartSession(opts?.autoStart ?? false); setPatientView(v); }} />}
         {patientView === 'sesiones' && <PatientSession autoStart={autoStartSession} />}
         {patientView === 'progreso' && <PatientAchievements />}
+        {patientView === 'asistente' && <FisioAI onNavigate={setPatientView} />}
         {patientView === 'ajustes' && <PatientSettings onSignOut={() => { signOutPatient(); setOnboardingDone(false); }} />}
       </PatientLayout>
     );
